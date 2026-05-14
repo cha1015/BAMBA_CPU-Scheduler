@@ -1,0 +1,445 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CPU Scheduling Simulator</title>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&family=Montserrat:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="app">
+      <!-- ══ HEADER ════════════════════════════════════════════ -->
+      <header>
+        <div class="logo">
+          <div>
+            <div class="logo-text">CPU <span>Scheduler</span></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ══ STEP 1: ALGORITHM ═════════════════════════════════ -->
+      <div class="section-label">Step 01 — Algorithm</div>
+      <div class="section-title">Select Scheduling Algorithm</div>
+      <div class="section-desc">
+        Choose the CPU scheduling strategy. Non-preemptive algorithms run a
+        process to completion; preemptive ones may interrupt it mid-execution.
+      </div>
+
+      <div class="algo-grid" id="algo-grid">
+        <div class="algo-card active" data-algo="fcfs">
+          <div class="algo-card-top">
+            <div class="algo-abbr">FCFS</div>
+            <div class="algo-type">Non-Preemptive</div>
+          </div>
+          <div class="algo-name">First-Come, First-Served</div>
+          <div class="algo-desc">
+            Runs processes in arrival order. Simple but prone to the convoy
+            effect.
+          </div>
+        </div>
+        <div class="algo-card" data-algo="sjf">
+          <div class="algo-card-top">
+            <div class="algo-abbr">SJF</div>
+            <div class="algo-type">Non-Preemptive</div>
+          </div>
+          <div class="algo-name">Shortest Job First</div>
+          <div class="algo-desc">
+            Picks the shortest burst-time process. Minimizes average waiting
+            time.
+          </div>
+        </div>
+        <div class="algo-card" data-algo="srt">
+          <div class="algo-card-top">
+            <div class="algo-abbr">SRT</div>
+            <div class="algo-type preemptive">Preemptive</div>
+          </div>
+          <div class="algo-name">Shortest Remaining Time</div>
+          <div class="algo-desc">
+            Preemptive SJF. Interrupts running process when a shorter job
+            arrives.
+          </div>
+        </div>
+        <div class="algo-card" data-algo="rr">
+          <div class="algo-card-top">
+            <div class="algo-abbr">RR</div>
+            <div class="algo-type preemptive">Preemptive</div>
+          </div>
+          <div class="algo-name">Round Robin</div>
+          <div class="algo-desc">
+            Each process gets a fixed time quantum cyclically. Fair
+            time-sharing.
+          </div>
+        </div>
+        <div class="algo-card" data-algo="priority_np">
+          <div class="algo-card-top">
+            <div class="algo-abbr">PRI-NP</div>
+            <div class="algo-type">Non-Preemptive</div>
+          </div>
+          <div class="algo-name">Priority (Non-Preemptive)</div>
+          <div class="algo-desc">
+            Picks highest-priority ready process and runs it to completion.
+          </div>
+        </div>
+        <div class="algo-card" data-algo="priority">
+          <div class="algo-card-top">
+            <div class="algo-abbr">PRI-P</div>
+            <div class="algo-type preemptive">Preemptive</div>
+          </div>
+          <div class="algo-name">Priority (Preemptive)</div>
+          <div class="algo-desc">
+            Preempts running process when a higher-priority job arrives.
+          </div>
+        </div>
+        <div class="algo-card" data-algo="priority_rr">
+          <div class="algo-card-top">
+            <div class="algo-abbr">P-RR</div>
+            <div class="algo-type preemptive">Preemptive</div>
+          </div>
+          <div class="algo-name">Priority + Round Robin</div>
+          <div class="algo-desc">
+            Priority-based scheduling with Round Robin among equal-priority
+            processes.
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ STEP 2: PROCESSES ═══════════════════════════════════ -->
+      <div class="section-label">Step 02 — Processes</div>
+      <div class="section-title">Configure Processes</div>
+      <div class="section-desc">
+        Add at least 3 processes. Arrival ≥ 0, Burst &gt; 0. For Priority
+        algorithms: lower number = higher priority (1 = highest).
+      </div>
+
+      <div class="main-layout">
+        <!-- ── SIDEBAR LEFT ── -->
+        <div class="sidebar">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span
+                  class="dot"
+                  style="
+                    background: var(--purple);
+                    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15);
+                  "
+                ></span>
+                Settings
+              </div>
+            </div>
+            <div class="settings-group">
+              <div class="form-field quantum-field" id="quantum-field">
+                <label class="form-label">Time Quantum</label>
+                <input
+                  type="number"
+                  id="quantum-input"
+                  value="2"
+                  min="1"
+                  placeholder="e.g. 2"
+                />
+                <div class="form-hint">
+                  Used for Round Robin and Priority + RR
+                </div>
+              </div>
+
+              <div class="priority-note" id="priority-note">
+                ⚠️ <strong>Priority Rule:</strong> Lower number = Higher
+                priority. Priority 1 is the highest. Ties broken by arrival
+                time.
+              </div>
+
+              <div class="form-field">
+                <label class="form-label">Selected Algorithm</label>
+                <div
+                  style="
+                    font-size: 22px;
+                    font-weight: 800;
+                    color: var(--orange);
+                    margin-top: 2px;
+                    letter-spacing: -0.5px;
+                  "
+                  id="sidebar-algo-name"
+                >
+                  FCFS
+                </div>
+                <div
+                  style="
+                    font-size: 12px;
+                    color: var(--text3);
+                    margin-top: 4px;
+                    font-weight: 500;
+                  "
+                  id="sidebar-algo-desc"
+                >
+                  First-Come, First-Served
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div
+              class="card-header"
+              style="margin-bottom: 0; border-bottom: none; padding-bottom: 0"
+            >
+              <div class="card-title">
+                <span
+                  class="dot"
+                  style="
+                    background: var(--teal);
+                    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+                  "
+                ></span>
+                Last Run Stats
+              </div>
+            </div>
+            <div style="padding-top: 14px" id="quick-stats">
+              <div
+                style="
+                  font-size: 13px;
+                  color: var(--text3);
+                  padding: 8px 0;
+                  font-weight: 500;
+                "
+              >
+                Run a simulation to see stats here.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── PROCESS TABLE RIGHT ── -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><span class="dot"></span>Process Queue</div>
+            <div style="font-size: 12px; color: var(--text3); font-weight: 500">
+              Minimum 3 processes
+            </div>
+          </div>
+          <div class="process-table-wrap">
+            <table class="process-table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Process ID</th>
+                  <th>Arrival Time</th>
+                  <th>Burst Time</th>
+                  <th id="priority-header" style="display: none">Priority</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="process-tbody"></tbody>
+            </table>
+          </div>
+          <div class="table-actions no-print">
+            <button class="btn btn-secondary btn-sm" id="add-row-btn">
+              ＋ Add Process
+            </button>
+            <button class="btn btn-ghost btn-sm" id="clear-all-btn">
+              ✕ Clear All
+            </button>
+            <button class="btn btn-secondary btn-sm" id="load-example-btn">
+              Load Example
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ RUN BAR ════════════════════════════════════════════ -->
+      <div class="run-bar no-print">
+        <div class="algo-indicator">
+          <span style="color: var(--text3)">Algorithm:</span>
+          <span class="name" id="run-algo-name"
+            >FCFS — First-Come, First-Served</span
+          >
+        </div>
+        <div class="spacer"></div>
+        <button class="btn btn-secondary btn-sm" id="compare-all-btn">
+          ⚖️ Compare All
+        </button>
+        <button class="btn btn-primary" id="run-btn">▶ Run Simulation</button>
+      </div>
+
+      <!-- ══ PROGRESS BAR ═══════════════════════════════════════ -->
+      <div class="progress-wrap" id="progress-wrap">
+        <span
+          style="font-size: 13px; color: var(--orange-dark); font-weight: 600"
+          id="progress-text"
+          >Simulating…</span
+        >
+        <div class="progress-bar-outer">
+          <div class="progress-bar-inner" id="progress-bar"></div>
+        </div>
+        <span class="progress-label" id="progress-pct">0%</span>
+      </div>
+
+      <!-- ══ STEP 3: RESULTS ════════════════════════════════════ -->
+      <section id="results-section">
+        <div class="divider"></div>
+        <div class="section-label">Step 03 — Results</div>
+        <div class="section-title">Simulation Output</div>
+        <div class="section-desc" id="results-desc">
+          Gantt chart, per-process metrics, and step-by-step computation
+          breakdown.
+        </div>
+
+        <!-- Gantt Chart -->
+        <div class="card" style="margin-bottom: 20px">
+          <div class="card-header">
+            <div class="card-title">
+              <span
+                class="dot"
+                style="
+                  background: var(--amber);
+                  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.15);
+                "
+              ></span>
+              Gantt Chart
+            </div>
+            <div style="font-size: 12px; color: var(--text3); font-weight: 500">
+              Hover over segments for details
+            </div>
+          </div>
+          <div class="gantt-wrap">
+            <canvas id="gantt-canvas" height="90"></canvas>
+          </div>
+          <div class="gantt-legend" id="gantt-legend"></div>
+        </div>
+
+        <!-- Stat Cards: high-level averages populated after simulation runs -->
+        <div class="stats-grid" style="margin-bottom: 20px">
+          <div class="stat-card">
+            <div class="stat-label">Avg Turnaround</div>
+            <div class="stat-value" id="stat-atat">—</div>
+            <div class="stat-unit">time units</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Waiting Time</div>
+            <div class="stat-value" id="stat-awt">—</div>
+            <div class="stat-unit">time units</div>
+          </div>
+        </div>
+
+        <!-- Per-Process Summary -->
+        <div class="card" style="margin-bottom: 20px">
+          <div class="card-header">
+            <div class="card-title">
+              <span class="dot"></span>Per-Process Summary
+            </div>
+            <div style="font-size: 11px; color: var(--text3); font-weight: 500">
+              TAT = CT − AT &nbsp;·&nbsp; WT = TAT − BT
+            </div>
+          </div>
+          <div style="overflow-x: auto">
+            <!-- Table columns: process identity, scheduling input, and computed metrics -->
+            <table class="results-table">
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Arrival Time</th>
+                  <th>Burst Time</th>
+                  <th>Completion Time</th>
+                  <th>Turnaround Time</th>
+                  <th>Waiting Time</th>
+                </tr>
+              </thead>
+              <tbody id="results-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Computation Breakdown -->
+        <div class="card" style="margin-bottom: 20px">
+          <div class="card-header">
+            <div class="card-title">
+              <span
+                class="dot"
+                style="
+                  background: var(--teal);
+                  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+                "
+              ></span>
+              Computation Breakdown
+            </div>
+            <div style="font-size: 11px; color: var(--text3); font-weight: 500">
+              Step-by-step derivation of averages
+            </div>
+          </div>
+
+          <div class="formula-def">
+            <strong>Formulas:</strong><br />
+            <code>TAT = Completion Time (CT) − Arrival Time (AT)</code><br />
+            <code>WT = Turnaround Time (TAT) − Burst Time (BT)</code><br />
+            <code>Avg TAT = ΣTAT / n</code>
+            <code>Avg WT = ΣWT / n</code> &nbsp;&nbsp;
+          </div>
+
+          <div style="overflow-x: auto; margin-bottom: 18px">
+            <table class="computation-table">
+              <thead>
+                <tr>
+                  <th>Process</th>
+                  <th>Arrival Time</th>
+                  <th>Burst Time</th>
+                  <th>Completion Time</th>
+                  <th>Turnaround Time</th>
+                  <th>Waiting Time</th>
+                </tr>
+              </thead>
+              <tbody id="computation-tbody"></tbody>
+            </table>
+          </div>
+
+          <div class="avg-formula-box" id="avg-formula-box"></div>
+        </div>
+
+        <!-- Compare Section -->
+        <div id="compare-section" style="display: none; margin-bottom: 20px">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">
+                <span
+                  class="dot"
+                  style="
+                    background: var(--blue);
+                    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+                  "
+                ></span>
+                Algorithm Comparison
+              </div>
+              <div
+                style="font-size: 12px; color: var(--text3); font-weight: 500"
+              >
+                Same input · All 7 algorithms ·
+                <span style="color: var(--green); font-weight: 700">Green</span>
+                = best
+              </div>
+            </div>
+            <div style="overflow-x: auto">
+              <table class="compare-table">
+                <thead>
+                  <tr>
+                    <th>Algorithm</th>
+                    <th>Avg TAT</th>
+                    <th>Avg WT</th>
+                  </tr>
+                </thead>
+                <tbody id="compare-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <!-- .app -->
+
+    <div class="tooltip-box" id="tooltip"></div>
+    <div class="toast" id="toast"></div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
